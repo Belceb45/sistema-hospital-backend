@@ -13,6 +13,15 @@ public class RegisterRequest {
     private String rfc;
     private String direccion;
 
+    public String getFechaNacimiento() {
+        return fechaNacimiento;
+    }
+
+    public void setFechaNacimiento(String fechaNacimiento) {
+        this.fechaNacimiento = fechaNacimiento;
+    }
+
+    private String fechaNacimiento;
 
     public String getNombreCompleto() {
         return nombreCompleto;
