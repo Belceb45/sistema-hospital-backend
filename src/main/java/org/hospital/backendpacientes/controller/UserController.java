@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Year;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -26,32 +27,50 @@ public class UserController {
     @Autowired
     private DoctorRepo doctorRepo;
 
+    // ==========================================
+    // MÉTODO AUXILIAR: GENERAR EXPEDIENTE ÚNICO
+    // ==========================================
+    private String generarExpedienteUnico() {
+        String expediente;
+        boolean existe;
+
+        do {
+            int anio = Year.now().getValue();
+            int randomNum = new Random().nextInt(90000) + 10000;
+            expediente = anio + "-" + randomNum;
+            existe = userRepo.findByNumExpediente(expediente).isPresent();
+        } while (existe);
+
+        return expediente;
+    }
+
     // ============================
     // REGISTRO
     // ============================
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
 
-        // Validar que envíe solo uno: expediente O curp
         if ((request.getNumExpediente() == null || request.getNumExpediente().isEmpty()) &&
                 (request.getCurp() == null || request.getCurp().isEmpty())) {
-
-            return ResponseEntity.badRequest().body("Debes enviar expediente O CURP.");
+            return ResponseEntity.badRequest().body("Debes enviar expediente (si ya tienes) O CURP (para nuevo registro).");
         }
 
         if (request.getNumExpediente() != null && !request.getNumExpediente().isEmpty() &&
                 request.getCurp() != null && !request.getCurp().isEmpty()) {
-
             return ResponseEntity.badRequest().body("Solo envía expediente o CURP, no ambos.");
         }
 
-        // Validar duplicados
-        if (request.getNumExpediente() != null &&
-                userRepo.findByNumExpediente(request.getNumExpediente()).isPresent()) {
-            return ResponseEntity.badRequest().body("El expediente ya está registrado.");
+        String numExpedienteFinal = request.getNumExpediente();
+
+        if (numExpedienteFinal == null || numExpedienteFinal.isEmpty()) {
+            numExpedienteFinal = generarExpedienteUnico();
+        } else {
+            if (userRepo.findByNumExpediente(numExpedienteFinal).isPresent()) {
+                return ResponseEntity.badRequest().body("El expediente proporcionado ya está registrado.");
+            }
         }
 
-        if (request.getCurp() != null &&
+        if (request.getCurp() != null && !request.getCurp().isEmpty() &&
                 userRepo.findByCurp(request.getCurp()).isPresent()) {
             return ResponseEntity.badRequest().body("La CURP ya está registrada.");
         }
@@ -61,9 +80,6 @@ public class UserController {
             return ResponseEntity.badRequest().body("El usuario ya está registrado.");
         }
 
-        // ============================
-        // ASIGNAR DOCTOR AUTOMÁTICO
-        // ============================
         List<UUID> idsDeDoctores = doctorRepo.findAllDoctorIds();
 
         if (idsDeDoctores.isEmpty()) {
@@ -73,9 +89,6 @@ public class UserController {
 
         UUID doctorAsignado = idsDeDoctores.get(new Random().nextInt(idsDeDoctores.size()));
 
-        // ============================
-        // CREAR PACIENTE
-        // ============================
         User user = new User();
         user.setNombreCompleto(request.getNombreCompleto());
         user.setCurp(request.getCurp());
@@ -85,7 +98,7 @@ public class UserController {
         user.setRFC(request.getRfc());
         user.setDireccion(request.getDireccion());
         user.setFechaNacimiento(request.getFechaNacimiento());
-        user.setNumExpediente(request.getNumExpediente());
+        user.setNumExpediente(numExpedienteFinal);
         user.setDoctorId(doctorAsignado);
 
         userRepo.save(user);
@@ -94,23 +107,33 @@ public class UserController {
     }
 
     // ============================
-    // LOGIN
+    // LOGIN (CORREGIDO: BÚSQUEDA INTELIGENTE)
     // ============================
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody RegisterRequest loginRequest) {
 
-        Optional<User> userOpt;
+        String identificador = null;
 
+        // 1. Extraer el dato, venga donde venga (CURP o Expediente)
         if (loginRequest.getCurp() != null && !loginRequest.getCurp().isEmpty()) {
-            userOpt = userRepo.findByCurp(loginRequest.getCurp());
+            identificador = loginRequest.getCurp();
         } else if (loginRequest.getNumExpediente() != null && !loginRequest.getNumExpediente().isEmpty()) {
-            userOpt = userRepo.findByNumExpediente(loginRequest.getNumExpediente());
+            identificador = loginRequest.getNumExpediente();
         } else {
             return ResponseEntity.badRequest().body("Debes enviar CURP o número de expediente");
         }
 
+        // 2. Intentar buscar por CURP primero
+        Optional<User> userOpt = userRepo.findByCurp(identificador);
+
+        // 3. Si no se encontró por CURP, intentar buscar por Expediente
         if (userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuario no encontrado");
+            userOpt = userRepo.findByNumExpediente(identificador);
+        }
+
+        // 4. Verificar resultado final
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuario no encontrado (Verifique sus credenciales)");
         }
 
         return ResponseEntity.ok(userOpt.get());
@@ -132,37 +155,20 @@ public class UserController {
 
         User user = userOpt.get();
 
-        // Actualizar SOLO campos permitidos
-        if (request.getTelefono() != null) {
-            user.setTelefono(request.getTelefono());
-        }
-        if (request.getTelefono2() != null) {
-            user.setTelefono2(request.getTelefono2());
-        }
-        if (request.getTelefono3() != null) {
-            user.setTelefono3(request.getTelefono3());
-        }
-        if (request.getDireccion() != null) {
-            user.setDireccion(request.getDireccion());
-        }
-        if (request.getFechaNacimiento() != null) {
-            user.setFechaNacimiento(request.getFechaNacimiento());
-        }
-        if (request.getNumExpediente() != null) {
-            user.setNumExpediente(request.getNumExpediente());
-        }
+        if (request.getTelefono() != null) user.setTelefono(request.getTelefono());
+        if (request.getTelefono2() != null) user.setTelefono2(request.getTelefono2());
+        if (request.getTelefono3() != null) user.setTelefono3(request.getTelefono3());
+        if (request.getDireccion() != null) user.setDireccion(request.getDireccion());
+        if (request.getFechaNacimiento() != null) user.setFechaNacimiento(request.getFechaNacimiento());
+        if (request.getNumExpediente() != null) user.setNumExpediente(request.getNumExpediente());
 
         userRepo.save(user);
 
         return ResponseEntity.ok(user);
     }
 
-    //Cambiar de doctor:
     @PutMapping("/actualizar/doctor/{id}")
-    public ResponseEntity<?> updateDoctor(
-            @PathVariable UUID id
-
-    ){
+    public ResponseEntity<?> updateDoctor(@PathVariable UUID id){
 
         Optional<User> userOpt = userRepo.findById(id);
 
@@ -172,8 +178,6 @@ public class UserController {
         }
 
         User user = userOpt.get();
-
-        // Actualizacion unica del doctor
 
         List<UUID> idsDeDoctores = doctorRepo.findAllDoctorIds();
         List<UUID> idsDeDoctores2 = idsDeDoctores.stream()
@@ -185,7 +189,6 @@ public class UserController {
                     .body("No hay mas doctores disponibles");
         }
 
-
         UUID doctorAsignado = idsDeDoctores2.get(new Random().nextInt(idsDeDoctores2.size()));
 
         user.setDoctorId(doctorAsignado);
@@ -193,7 +196,4 @@ public class UserController {
 
         return ResponseEntity.ok(user);
     }
-
-
-
 }
