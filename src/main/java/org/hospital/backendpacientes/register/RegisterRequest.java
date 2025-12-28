@@ -12,6 +12,18 @@ public class RegisterRequest {
     private String telefono3;
     private String rfc;
     private String direccion;
+    private Boolean afiliado;
+
+
+    public Boolean getAfiliado() {
+        return afiliado;
+    }
+
+    public void setAfiliado(Boolean afiliado) {
+        this.afiliado = afiliado;
+    }
+
+
 
     public String getFechaNacimiento() {
         return fechaNacimiento;

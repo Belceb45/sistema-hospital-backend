@@ -24,12 +24,14 @@ public class User {
     //Medico asignado
     @Column(name = "doctor_id")
     private UUID doctorId;
+    private Boolean afiliado;
+
 
     public User() {}
 
     public User(String nombreCompleto, String curp, String telefono,
                 String telefono2, String telefono3, String RFC,
-                String direccion,String fechaNacimiento, UUID doctorId, String numExpediente) {
+                String direccion,String fechaNacimiento, UUID doctorId, String numExpediente, Boolean afiliado) {
         this.nombreCompleto = nombreCompleto;
         this.curp = curp;
         this.telefono = telefono;
@@ -40,9 +42,17 @@ public class User {
         this.fechaNacimiento = fechaNacimiento;
         this.doctorId = doctorId;
         this.numExpediente = numExpediente;
+        this.afiliado = afiliado;
     }
 
     // ----- GETTERS & SETTERS -----
+    public Boolean getAfiliado() {
+        return afiliado;
+    }
+
+    public void setAfiliado(Boolean afiliado) {
+        this.afiliado = afiliado;
+    }
 
     public UUID getId() {
         return id;

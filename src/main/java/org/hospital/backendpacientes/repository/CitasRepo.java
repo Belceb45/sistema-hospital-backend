@@ -38,4 +38,5 @@ public interface CitasRepo extends JpaRepository<Cita, UUID> {
             LocalDate fecha,
             LocalTime hora
     );
+    void deleteByPacienteId(UUID pacienteId);
 }
