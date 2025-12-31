@@ -21,13 +21,13 @@ public class NotificacionController {
     @Autowired
     private UserRepo userRepo;
 
-    // 1. OBTENER NOTIFICACIONES DE UN PACIENTE
+    // OBTENER NOTIFICACIONES DE UN PACIENTE
     @GetMapping("/paciente/{id}")
     public ResponseEntity<List<Notificacion>> obtenerPorPaciente(@PathVariable UUID id) {
         return ResponseEntity.ok(notificacionRepo.findByPacienteIdOrderByFechaDesc(id));
     }
 
-    // 2. ENVIAR NOTIFICACIÓN (Para uso del sistema o admin)
+    // ENVIAR NOTIFICACIÓN
     @PostMapping("/enviar")
     public ResponseEntity<?> enviarNotificacion(@RequestParam UUID pacienteId, @RequestParam String mensaje) {
         if (!userRepo.existsById(pacienteId)) {
@@ -40,7 +40,7 @@ public class NotificacionController {
         return ResponseEntity.ok("Notificación enviada");
     }
 
-    // 3. MARCAR COMO LEÍDAS (Opcional, para limpiar el icono rojo)
+    // MARCAR COMO LEÍDAS
     @PutMapping("/leer/{id}")
     public ResponseEntity<?> marcarLeida(@PathVariable UUID id) {
         return notificacionRepo.findById(id).map(noti -> {

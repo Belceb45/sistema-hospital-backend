@@ -19,14 +19,14 @@ public class Cita {
     private LocalTime hora;
 
     @Column(name = "paciente_id")
-    private UUID pacienteId; // Puede ser null
+    private UUID pacienteId;
 
     @Column(name = "doctor_id", nullable = false)
     private UUID doctorId;
 
-    private String estado; // "DISPONIBLE", "AGENDADA", "CANCELADA"
+    private String estado;
 
-    // ====== Getters y setters ======
+
 
     public UUID getId() {
         return id;

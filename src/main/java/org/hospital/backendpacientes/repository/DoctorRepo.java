@@ -14,6 +14,6 @@ public interface DoctorRepo extends JpaRepository<Doctor, UUID> {
     @Query("SELECT d.id FROM Doctor d WHERE d.especialidad = 'Medicina General'")
     List<UUID> findAllDoctorIds();
 
-    // NUEVO: Buscar doctores por especialidad (ej. "Ortopedia")
+    // Buscar doctores por especialidad
     List<Doctor> findByEspecialidad(String especialidad);
 }

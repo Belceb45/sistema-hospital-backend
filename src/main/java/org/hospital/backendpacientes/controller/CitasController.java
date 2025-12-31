@@ -18,7 +18,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/citas")
-@CrossOrigin(origins = "*") // Permite peticiones desde React
+@CrossOrigin(origins = "*")
 public class CitasController {
 
     @Autowired
@@ -31,12 +31,11 @@ public class CitasController {
     private DoctorRepo doctorRepo;
 
     // ---------------------------------------------------------
-    // 1. OBTENER CITAS DISPONIBLES (Para Agendar - Nueva.tsx)
-    // ---------------------------------------------------------
+    // 1. OBTENER CITAS DISPONIBLES
     @GetMapping("/disponibles")
     public ResponseEntity<?> citasDisponibles(@RequestParam UUID pacienteId) {
 
-        // 1. Buscar al paciente para ver qué doctor tiene asignado
+
         User paciente = userRepo.findById(pacienteId).orElse(null);
 
         if (paciente == null) {
@@ -49,20 +48,18 @@ public class CitasController {
 
         UUID doctorId = paciente.getDoctorId();
 
-        // 2. Buscar citas disponibles SOLO de ese doctor
-        // Esto asume que tienes el método findByEstadoAndDoctorId en tu Repo
+
         List<Cita> disponibles = citasRepo.findByEstadoAndDoctorId("disponible", doctorId);
 
         return ResponseEntity.ok(disponibles);
     }
 
     // ---------------------------------------------------------
-    // 2. OBTENER HISTORIAL COMPLETO (Para Board.tsx y Citas.tsx)
+    // 2. OBTENER HISTORIAL COMPLETO
     // ---------------------------------------------------------
     @GetMapping("/paciente/{pacienteId}")
     public ResponseEntity<List<Cita>> citasPorPaciente(@PathVariable UUID pacienteId) {
-        // AQUÍ ESTÁ LA CLAVE: No filtramos por estado. Traemos todo.
-        // El frontend se encarga de separar en "Próximas", "Pasadas" y "Canceladas".
+
         List<Cita> citas = citasRepo.findByPacienteId(pacienteId);
         return ResponseEntity.ok(citas);
     }
@@ -85,7 +82,7 @@ public class CitasController {
             return ResponseEntity.badRequest().body("La cita ya no está disponible.");
 
         cita.setPacienteId(pacienteId);
-        cita.setEstado("agendada"); // Cambiamos estado a ocupado
+        cita.setEstado("agendada");
 
         citasRepo.save(cita);
 
@@ -105,7 +102,7 @@ public class CitasController {
 
 
         cita.setEstado("disponible");
-        cita.setPacienteId(null); // Se libera para otro paciente
+        cita.setPacienteId(null);
 
         citasRepo.save(cita);
 
@@ -138,11 +135,11 @@ public class CitasController {
         if (!nuevaCita.getEstado().equalsIgnoreCase("disponible"))
             return ResponseEntity.badRequest().body("La nueva cita NO está disponible.");
 
-        // 1. Liberar la cita actual
+        // Liberar la cita actual
         citaActual.setEstado("disponible");
         citaActual.setPacienteId(null);
 
-        // 2. Ocupar la nueva cita
+        // Ocupar la nueva cita
         nuevaCita.setEstado("agendada");
         nuevaCita.setPacienteId(pacienteId);
 
@@ -166,7 +163,7 @@ public class CitasController {
 
         for (Object[] fila : ultimasFechas) {
             UUID doctorId = (UUID) fila[0];
-            java.sql.Date sqlDate = (java.sql.Date) fila[1]; // A veces JPA devuelve sql.Date
+            java.sql.Date sqlDate = (java.sql.Date) fila[1]; // PA devuelve sql.Date
             LocalDate fechaInicio = (sqlDate != null) ? sqlDate.toLocalDate() : hoy;
 
             LocalDate fecha = fechaInicio.plusDays(1);
@@ -186,7 +183,7 @@ public class CitasController {
                         nueva.setPacienteId(null);
                         citasRepo.save(nueva);
                     }
-                    hora = hora.plusMinutes(60); // Citas cada 1 hora
+                    hora = hora.plusMinutes(60);
                 }
                 fecha = fecha.plusDays(1);
             }
@@ -212,30 +209,30 @@ public class CitasController {
             @RequestParam UUID pacienteId,
             @RequestParam String especialidad
     ) {
-        // 1. Validar paciente
+        // Validar paciente
         if (!userRepo.existsById(pacienteId)) {
             return ResponseEntity.badRequest().body("Paciente no encontrado.");
         }
 
-        // 2. Buscar doctores de esa especialidad
+        // Buscar doctores de esa especialidad
         List<Doctor> especialistas = doctorRepo.findByEspecialidad(especialidad);
 
         if (especialistas.isEmpty()) {
             return ResponseEntity.badRequest().body("No hay doctores registrados con la especialidad: " + especialidad);
         }
 
-        // 3. Buscar la primera cita disponible entre los especialistas encontrados
+        // Buscar la primera cita disponible entre los especialistas encontrados
         Cita citaEncontrada = null;
 
         for (Doctor doc : especialistas) {
-            // Buscamos la próxima cita libre de este doctor
+            // próxima cita libre
             Optional<Cita> posibleCita = citasRepo.findFirstByDoctorIdAndEstadoOrderByFechaAscHoraAsc(
                     doc.getId(), "disponible"
             );
 
             if (posibleCita.isPresent()) {
                 citaEncontrada = posibleCita.get();
-                break; // Encontramos una, dejamos de buscar
+                break;
             }
         }
 
@@ -243,7 +240,7 @@ public class CitasController {
             return ResponseEntity.badRequest().body("No hay horarios disponibles próximamente para " + especialidad);
         }
 
-        // 4. Asignar la cita al paciente
+        // Asignar la cita al paciente
         citaEncontrada.setPacienteId(pacienteId);
         citaEncontrada.setEstado("agendada");
 

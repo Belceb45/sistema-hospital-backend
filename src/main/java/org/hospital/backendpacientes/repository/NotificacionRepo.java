@@ -9,6 +9,6 @@ import java.util.UUID;
 
 @Repository
 public interface NotificacionRepo extends JpaRepository<Notificacion, UUID> {
-    // Traer las más recientes primero
+    // más recientes primero
     List<Notificacion> findByPacienteIdOrderByFechaDesc(UUID pacienteId);
 }

@@ -11,13 +11,13 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/historial")
-@CrossOrigin(origins = "*") // Permite conexión desde React
+@CrossOrigin(origins = "*")
 public class HistorialController {
 
     @Autowired
     private HistorialRepo historialRepo;
 
-    // OBTENER MI HISTORIAL
+
     @GetMapping("/{pacienteId}")
     public ResponseEntity<?> obtenerHistorial(@PathVariable UUID pacienteId) {
         Optional<HistorialMedico> historial = historialRepo.findByPacienteId(pacienteId);
@@ -25,7 +25,7 @@ public class HistorialController {
         if (historial.isPresent()) {
             return ResponseEntity.ok(historial.get());
         } else {
-            // Retorna vacío si no tiene historial (el front lo manejará limpiando los campos)
+
             return ResponseEntity.noContent().build();
         }
     }
@@ -34,14 +34,14 @@ public class HistorialController {
     @PostMapping("/guardar")
     public ResponseEntity<?> guardarHistorial(@RequestBody HistorialMedico datosEntrantes) {
 
-        // Buscamos si ya existe historial para este paciente
+        // existe historial para este paciente
         Optional<HistorialMedico> existente = historialRepo.findByPacienteId(datosEntrantes.getPacienteId());
 
         if (existente.isPresent()) {
-            // --- MODO ACTUALIZACIÓN ---
+
             HistorialMedico historial = existente.get();
 
-            // Actualizamos campo por campo
+
             historial.setDiabetes(datosEntrantes.isDiabetes());
             historial.setHipertension(datosEntrantes.isHipertension());
             historial.setAsma(datosEntrantes.isAsma());
@@ -57,7 +57,7 @@ public class HistorialController {
             return ResponseEntity.ok(historial);
 
         } else {
-            // --- MODO CREACIÓN (Primera vez) ---
+
             historialRepo.save(datosEntrantes);
             return ResponseEntity.ok(datosEntrantes);
         }

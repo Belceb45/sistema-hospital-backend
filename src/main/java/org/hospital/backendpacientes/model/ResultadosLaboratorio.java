@@ -13,14 +13,14 @@ public class ResultadosLaboratorio {
     private UUID id;
 
     @Column(nullable = false)
-    private UUID pacienteId; // Relación con el paciente
+    private UUID pacienteId;
 
-    private String tipoEstudio; // Ej: "Biometría Hemática", "Rayos X"
-    private String descripcion; // Ej: "Niveles normales, ligera anemia..."
+    private String tipoEstudio;
+    private String descripcion;
     private LocalDate fechaRealizacion;
     private String doctorSolicitante;
 
-    // En un sistema real, aquí guardamos la URL de S3 o la ruta del servidor
+
     private String urlArchivo;
 
     public ResultadosLaboratorio() {}
@@ -34,7 +34,7 @@ public class ResultadosLaboratorio {
         this.urlArchivo = "/files/resultado_ejemplo.pdf"; // Simulado
     }
 
-    // Getters y Setters
+
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getPacienteId() { return pacienteId; }

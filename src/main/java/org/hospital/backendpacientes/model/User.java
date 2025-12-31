@@ -45,7 +45,7 @@ public class User {
         this.afiliado = afiliado;
     }
 
-    // ----- GETTERS & SETTERS -----
+
     public Boolean getAfiliado() {
         return afiliado;
     }

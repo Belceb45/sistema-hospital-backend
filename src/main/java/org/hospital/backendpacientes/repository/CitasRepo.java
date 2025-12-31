@@ -17,13 +17,13 @@ public interface CitasRepo extends JpaRepository<Cita, UUID> {
     Optional<Cita> findCitaById(UUID citaID);
     List<Cita> findByEstado(String estado);
 
-    // Este es el que usa el historial (Trae todo)
+
     List<Cita> findByPacienteId(UUID pacienteId);
 
-    // Este es el que usa el agendamiento normal
+
     List<Cita> findByEstadoAndDoctorId(String estado, UUID doctorId);
 
-    // NUEVO: Encontrar la primera cita disponible de un doctor (la más próxima)
+
     Optional<Cita> findFirstByDoctorIdAndEstadoOrderByFechaAscHoraAsc(UUID doctorId, String estado);
 
     @Query("""

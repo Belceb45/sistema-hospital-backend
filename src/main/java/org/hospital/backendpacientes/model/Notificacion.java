@@ -22,7 +22,7 @@ public class Notificacion {
 
     private boolean leida = false;
 
-    // Constructores
+
     public Notificacion() {}
 
     public Notificacion(UUID pacienteId, String mensaje) {
@@ -32,7 +32,7 @@ public class Notificacion {
         this.leida = false;
     }
 
-    // Getters y Setters
+
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getPacienteId() { return pacienteId; }

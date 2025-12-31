@@ -20,7 +20,7 @@ public class Doctor {
     private String telefono;
     private String email;
 
-    // ====== Getters y setters ======
+
     public UUID getId() {
         return id;
     }

@@ -32,9 +32,7 @@ public class UserController {
     @Autowired
     private ResultadosRepo resultadosRepo;
 
-    // ==========================================
-    // MÉTODO AUXILIAR: GENERAR EXPEDIENTE ÚNICO
-    // ==========================================
+
     private String generarExpedienteUnico() {
         String expediente;
         boolean existe;
@@ -55,40 +53,37 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
 
-        // Validación 1: Debe enviar al menos uno
+
         if ((request.getNumExpediente() == null || request.getNumExpediente().isEmpty()) &&
                 (request.getCurp() == null || request.getCurp().isEmpty())) {
             return ResponseEntity.badRequest().body("Debes enviar expediente (si ya tienes) O CURP (para nuevo registro).");
         }
 
-        // Validación 2: No ambos
+
         if (request.getNumExpediente() != null && !request.getNumExpediente().isEmpty() &&
                 request.getCurp() != null && !request.getCurp().isEmpty()) {
             return ResponseEntity.badRequest().body("Solo envía expediente o CURP, no ambos.");
         }
 
-        // Validación 3: Si envía Expediente Manualmente (Migración o reingreso)
-        // Recuperamos la lógica de validación de duplicados para este caso específico
+
         if (request.getNumExpediente() != null && !request.getNumExpediente().isEmpty()) {
             if (userRepo.findByNumExpediente(request.getNumExpediente()).isPresent()) {
                 return ResponseEntity.badRequest().body("El expediente proporcionado ya está registrado.");
             }
         }
-        // NOTA: Ya no generamos automático aquí si viene vacío, se queda null hasta que el admin lo asigne.
 
-        // Validación 4: Duplicados CURP
         if (request.getCurp() != null && !request.getCurp().isEmpty() &&
                 userRepo.findByCurp(request.getCurp()).isPresent()) {
             return ResponseEntity.badRequest().body("La CURP ya está registrada.");
         }
 
-        // Validación 5: Duplicados Nombre
+
         if (request.getNombreCompleto() != null &&
                 userRepo.findByNombreCompleto(request.getNombreCompleto()).isPresent()) {
             return ResponseEntity.badRequest().body("El usuario ya está registrado.");
         }
 
-        // Asignación de Doctor
+
         List<UUID> idsDeDoctores = doctorRepo.findAllDoctorIds();
 
         if (idsDeDoctores.isEmpty()) {
@@ -108,7 +103,7 @@ public class UserController {
         user.setDireccion(request.getDireccion());
         user.setFechaNacimiento(request.getFechaNacimiento());
         user.setAfiliado(request.getAfiliado() != null ? request.getAfiliado() : false);
-        // IMPORTANTE: Si venía en el request (manual), lo asignamos. Si no, se queda null.
+
         if (request.getNumExpediente() != null) {
             user.setNumExpediente(request.getNumExpediente());
         }
@@ -207,9 +202,7 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    // ============================
-    // NUEVO ENDPOINT: ASIGNAR EXPEDIENTE
-    // ============================
+
     @PutMapping("/asignar/expediente/{id}")
     public ResponseEntity<?> updateExpediente(@PathVariable UUID id){
         Optional<User> userOpt = userRepo.findById(id);
@@ -221,7 +214,7 @@ public class UserController {
 
         User user = userOpt.get();
 
-        // Solo generamos uno nuevo si no tiene
+
         if (user.getNumExpediente() == null || user.getNumExpediente().isEmpty()) {
             String nuevoExpediente = generarExpedienteUnico();
             user.setNumExpediente(nuevoExpediente);
@@ -237,7 +230,7 @@ public class UserController {
 
     //Eliminar usuarios
     @DeleteMapping("/eliminar/{id}")
-    @Transactional // ¡CRÍTICO! Asegura que se borre todo o nada
+    @Transactional
     public ResponseEntity<?> eliminarUsuario(@PathVariable UUID id) {
 
 
@@ -246,7 +239,7 @@ public class UserController {
         }
 
         try {
-            // Borrar datos relacionados (Hijos primero)
+            // Borrar datos relacionados
             citasRepo.deleteByPacienteId(id);
             historialRepo.deleteByPacienteId(id);
 

@@ -27,7 +27,7 @@ public class HistorialMedico {
     private String antecedentesFamiliares;
     private String tipoSangre;
     private String urlExpediente;
-    // Constructor vacío obligatorio
+
     public HistorialMedico() {}
 
 
